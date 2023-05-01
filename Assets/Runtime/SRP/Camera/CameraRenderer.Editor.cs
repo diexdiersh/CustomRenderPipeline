@@ -2,12 +2,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
-    using UnityEngine.Rendering;
+using UnityEngine.Profiling;
+using UnityEngine.Rendering;
 
 public partial class CameraRenderer
 {
     private partial void DrawUnsupportedShaders();
     private partial void DrawGizmos();
+    private partial void PrepareForSceneWindow();
+    private partial void PrepareBuffer();
 
 #if UNITY_EDITOR
     static ShaderTagId[] legacyShaderTagIDs = new ShaderTagId[]
@@ -47,5 +50,25 @@ public partial class CameraRenderer
             context.DrawGizmos(camera, GizmoSubset.PostImageEffects);
         }
     }
+
+    private partial void PrepareForSceneWindow()
+    {
+        if (camera.cameraType == CameraType.SceneView)
+        {
+            ScriptableRenderContext.EmitWorldGeometryForSceneView(camera);
+        }
+    }
+
+    private string SampleName { get; set; }
+    private partial void PrepareBuffer()
+    {
+        Profiler.BeginSample("Editor Only");
+        buffer.name = SampleName = camera.name;
+        Profiler.EndSample();
+    }
+#else
+
+    private const string SampleName = bufferName;
+
 #endif
 }
